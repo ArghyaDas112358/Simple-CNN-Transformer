@@ -120,7 +120,7 @@ class TransformerEncoder(layers.Layer):
     
     def build(self, input_shape):
         self.norm1 = layers.LayerNormalization(epsilon=1e-6)
-        self.attn = layers.MultiHeadAttention(key_dim=self.head_size, num_heads=self.num_heads, dropout=self.dropout)
+        self.attn = MultiHeadAttention(key_dim=self.head_size, num_heads=self.num_heads, dropout=self.dropout)
         self.dropout1 = layers.Dropout(self.dropout)
         self.norm2 = layers.LayerNormalization(epsilon=1e-6)
         self.ff = Sequential([
