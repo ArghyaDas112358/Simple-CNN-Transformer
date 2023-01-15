@@ -39,6 +39,39 @@ class PatchEncoder(layers.Layer):
         encoded = self.projection(patch) + self.position_embedding(positions)
         return encoded
 
+class FeatureLayer(keras.layers.Layer):
+    def __init__(self, output_dim, **kwargs):
+        self.output_dim = output_dim
+        super(FeatureLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        # Create a trainable weight variable for this layer.
+        self.dense_layers = []
+        for i in range(input_shape[1]):
+            self.dense_layers.append(layers.Dense(5, use_bias=True, kernel_initializer='ones'))
+        super(FeatureLayer, self).build(input_shape)  # Be sure to call this at the end
+        
+
+
+    def call(self, x):
+        def apply_dense(x_slice):
+            return dense_layer(x_slice)
+        outputs = []
+        for i, dense_layer in enumerate(self.dense_layers):
+            x_slice = x[:, i, :]
+            x_slice = dense_layer(x_slice)
+            outputs.append(x_slice)
+        output = layers.Concatenate()(outputs)
+        output = layers.Reshape((x.shape[1], self.output_dim))(output)
+        return output  #keras.backend.map_fn(apply_dense, x) #:This commented part is more efficient and faster
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], input_shape[1], self.output_dim)
+    
+    def get_config(self):
+        return {"output_dim": self.output_dim}
+    
+
 class DotProductAttention(layers.Layer):
     def __init__(self, key_dim, num_heads, dropout=0.0):
         super().__init__()
